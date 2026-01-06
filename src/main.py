@@ -4,6 +4,8 @@ Entry point for Asana seed data generation.
 
 from src.utils.db_utils import initialize_database
 from src.generators.users import generate_users
+from src.generators.projects import generate_projects
+from src.generators.sections import generate_sections
 from src.generators.teams import generate_teams
 from src.generators.team_memberships import generate_team_memberships
 from src.config import COMPANY_NAME
@@ -91,6 +93,57 @@ def main():
                 m["team_id"],
                 m["user_id"],
                 m["joined_at"],
+            )
+        )
+    # -------------------------------------------------
+    # PROJECTS
+    # -------------------------------------------------
+    
+    print("Generating projects...")
+    projects = generate_projects(workspace_id, teams, users)
+
+    for p in projects:
+        cursor.execute(
+            """
+            INSERT INTO projects (
+                project_id, workspace_id, team_id, name, description,
+                project_type, status, privacy, owner_id, created_at, color
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                p["project_id"],
+                p["workspace_id"],
+                p["team_id"],
+                p["name"],
+                p["description"],
+                p["project_type"],
+                p["status"],
+                p["privacy"],
+                p["owner_id"],
+                p["created_at"],
+                p["color"],
+            )
+        )
+
+    # -------------------------------------------------
+    # SECTIONS
+    # -------------------------------------------------
+    print("Generating sections...")
+    sections = generate_sections(projects)
+
+    for s in sections:
+        cursor.execute(
+            """
+            INSERT INTO sections (section_id, project_id, name, display_order, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                s["section_id"],
+                s["project_id"],
+                s["name"],
+                s["display_order"],
+                s["created_at"],
             )
         )
 
