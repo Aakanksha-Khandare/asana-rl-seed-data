@@ -11,6 +11,11 @@ from src.generators.sections import generate_sections
 from src.generators.teams import generate_teams
 from src.generators.team_memberships import generate_team_memberships
 from src.config import COMPANY_NAME
+from src.generators.custom_fields import (
+    generate_custom_field_definitions,
+    generate_custom_field_values
+)
+
 
 
 def main():
@@ -209,6 +214,49 @@ def main():
                 c["created_at"],
                 c["edited_at"],
                 c["is_edited"],
+            )
+        )
+    # -------------------------------------------------
+    # CUSTOM FIELDS
+    # -------------------------------------------------
+    print("Generating custom fields...")
+    field_defs = generate_custom_field_definitions(projects)
+
+    for f in field_defs:
+        cursor.execute(
+            """
+            INSERT INTO custom_field_definitions (
+                field_id, project_id, field_name,
+                field_type, enum_options, is_required, created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                f["field_id"],
+                f["project_id"],
+                f["field_name"],
+                f["field_type"],
+                f["enum_options"],
+                f["is_required"],
+                f["created_at"],
+            )
+        )
+
+    field_values = generate_custom_field_values(tasks, field_defs)
+
+    for v in field_values:
+        cursor.execute(
+            """
+            INSERT INTO custom_field_values (
+                value_id, field_id, task_id, value
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                v["value_id"],
+                v["field_id"],
+                v["task_id"],
+                v["value"],
             )
         )
 
