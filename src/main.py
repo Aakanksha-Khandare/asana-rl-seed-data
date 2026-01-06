@@ -11,6 +11,11 @@ from src.generators.sections import generate_sections
 from src.generators.teams import generate_teams
 from src.generators.team_memberships import generate_team_memberships
 from src.config import COMPANY_NAME
+from src.generators.tags_attachments import (
+    generate_tags,
+    generate_task_tags,
+    generate_attachments
+)
 from src.generators.custom_fields import (
     generate_custom_field_definitions,
     generate_custom_field_values
@@ -257,6 +262,70 @@ def main():
                 v["field_id"],
                 v["task_id"],
                 v["value"],
+            )
+        )
+    # -------------------------------------------------
+    # TAGS
+    # -------------------------------------------------
+    print("Generating tags...")
+    tags = generate_tags(workspace_id)
+
+    for t in tags:
+        cursor.execute(
+            """
+            INSERT INTO tags (tag_id, workspace_id, name, color, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                t["tag_id"],
+                t["workspace_id"],
+                t["name"],
+                t["color"],
+                t["created_at"],
+            )
+        )
+
+    print("Assigning tags to tasks...")
+    task_tags = generate_task_tags(tasks, tags)
+
+    for tt in task_tags:
+        cursor.execute(
+            """
+            INSERT INTO task_tags (task_tag_id, task_id, tag_id, created_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                tt["task_tag_id"],
+                tt["task_id"],
+                tt["tag_id"],
+                tt["created_at"],
+            )
+        )
+
+    # -------------------------------------------------
+    # ATTACHMENTS
+    # -------------------------------------------------
+    print("Generating attachments...")
+    attachments = generate_attachments(tasks, users)
+
+    for a in attachments:
+        cursor.execute(
+            """
+            INSERT INTO attachments (
+                attachment_id, task_id, uploaded_by,
+                file_name, file_size, file_type, url, uploaded_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                a["attachment_id"],
+                a["task_id"],
+                a["uploaded_by"],
+                a["file_name"],
+                a["file_size"],
+                a["file_type"],
+                a["url"],
+                a["uploaded_at"],
             )
         )
 
