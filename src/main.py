@@ -5,6 +5,7 @@ Entry point for Asana seed data generation.
 from src.utils.db_utils import initialize_database
 from src.generators.users import generate_users
 from src.generators.teams import generate_teams
+from src.generators.team_memberships import generate_team_memberships
 from src.config import COMPANY_NAME
 
 
@@ -73,6 +74,26 @@ def main():
             )
         )
 
+    # -------------------------------------------------
+    # TEAM MEMBERSHIPS  (RUNS ONCE — ONLY HERE)
+    # -------------------------------------------------
+    print("Generating team memberships...")
+    memberships = generate_team_memberships(users, teams)
+
+    for m in memberships:
+        cursor.execute(
+            """
+            INSERT INTO team_memberships (membership_id, team_id, user_id, joined_at)
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                m["membership_id"],
+                m["team_id"],
+                m["user_id"],
+                m["joined_at"],
+            )
+        )
+
     conn.commit()
     conn.close()
     print("Done!")
@@ -80,3 +101,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
