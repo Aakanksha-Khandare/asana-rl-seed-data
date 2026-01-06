@@ -4,6 +4,7 @@ Entry point for Asana seed data generation.
 
 from src.utils.db_utils import initialize_database
 from src.generators.users import generate_users
+from src.generators.tasks import generate_tasks
 from src.generators.projects import generate_projects
 from src.generators.sections import generate_sections
 from src.generators.teams import generate_teams
@@ -98,7 +99,7 @@ def main():
     # -------------------------------------------------
     # PROJECTS
     # -------------------------------------------------
-    
+
     print("Generating projects...")
     projects = generate_projects(workspace_id, teams, users)
 
@@ -144,6 +145,44 @@ def main():
                 s["name"],
                 s["display_order"],
                 s["created_at"],
+            )
+        )
+    # -------------------------------------------------
+    # TASKS + SUBTASKS
+    # -------------------------------------------------
+    print("Generating tasks...")
+    tasks = generate_tasks(projects, sections, teams, users)
+
+    for t in tasks:
+        cursor.execute(
+            """
+            INSERT INTO tasks (
+                task_id, project_id, section_id, parent_task_id,
+                name, description, assignee_id, created_by,
+                created_at, modified_at, start_date, due_date,
+                completed, completed_at, priority,
+                estimated_hours, actual_hours
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                t["task_id"],
+                t["project_id"],
+                t["section_id"],
+                t["parent_task_id"],
+                t["name"],
+                t["description"],
+                t["assignee_id"],
+                t["created_by"],
+                t["created_at"],
+                t["modified_at"],
+                t["start_date"],
+                t["due_date"],
+                t["completed"],
+                t["completed_at"],
+                t["priority"],
+                t["estimated_hours"],
+                t["actual_hours"],
             )
         )
 
