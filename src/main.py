@@ -6,6 +6,7 @@ from src.utils.db_utils import initialize_database
 from src.generators.users import generate_users
 from src.generators.tasks import generate_tasks
 from src.generators.projects import generate_projects
+from src.generators.comments import generate_comments
 from src.generators.sections import generate_sections
 from src.generators.teams import generate_teams
 from src.generators.team_memberships import generate_team_memberships
@@ -183,6 +184,31 @@ def main():
                 t["priority"],
                 t["estimated_hours"],
                 t["actual_hours"],
+            )
+        )
+    # -------------------------------------------------
+    # COMMENTS
+    # -------------------------------------------------
+    print("Generating comments...")
+    comments = generate_comments(tasks, users)
+
+    for c in comments:
+        cursor.execute(
+            """
+            INSERT INTO comments (
+                comment_id, task_id, user_id,
+                comment_text, created_at, edited_at, is_edited
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                c["comment_id"],
+                c["task_id"],
+                c["user_id"],
+                c["comment_text"],
+                c["created_at"],
+                c["edited_at"],
+                c["is_edited"],
             )
         )
 
